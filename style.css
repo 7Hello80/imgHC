@@ -269,3 +269,114 @@ body {
 .stage::-webkit-scrollbar-track {
   background: transparent;
 }
+
+/* =========================================================
+   移动端响应式适配 (手机、平板竖屏)
+   ========================================================= */
+@media screen and (max-width: 768px) {
+  /* 1. 整体布局改为上下结构 */
+  .app-body {
+    flex-direction: column;
+    overflow-y: auto; /* 允许整体纵向滚动 */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* 2. 顶部导航栏适配 */
+  .app-header {
+    height: auto;
+    padding: 10px 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .brand {
+    font-size: 16px;
+  }
+
+  .tagline {
+    font-size: 12px;
+  }
+
+  /* 3. 左侧控制面板：改为全宽，并限制最大高度 */
+  .panel {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #d9ecff;
+    padding: 12px;
+    max-height: 60vh; /* 最多占屏幕高度的 60%，留出画布空间 */
+    overflow-y: auto;  /* 面板内部独立滚动 */
+  }
+
+  /* 移动端优化上传区域高度 */
+  .uploader .el-upload-dragger {
+    height: 90px;
+    padding: 10px 0;
+  }
+
+  .uploader .el-icon-upload {
+    font-size: 24px;
+    margin-top: 5px;
+  }
+
+  .uploader .el-upload__text {
+    font-size: 12px;
+  }
+
+  /* 移动端表单/按钮更紧凑 */
+  .panel-block {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+  }
+
+  .sel-info {
+    padding: 6px 8px;
+    font-size: 12px;
+    min-height: 32px;
+  }
+
+  .el-form-item {
+    margin-bottom: 12px;
+  }
+
+  /* 4. 右侧画布区：占据剩余空间 */
+  .stage {
+    flex: 1; /* 自动撑满剩余高度 */
+    min-height: 45vh; /* 保证画布区至少有 45% 屏幕高度 */
+    padding: 10px;
+    overflow: hidden; /* 禁止内部滚动条影响拖拽 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* 限制画布容器，确保图片能完整显示在屏幕内 */
+  .canvas-wrap {
+    max-width: 100%;
+    max-height: 100%;
+    box-shadow: 0 2px 10px rgba(64, 158, 255, 0.15);
+  }
+
+  /* 触摸设备优化，防止拖拽选区域时触发页面滚动 */
+  .overlay {
+    touch-action: none; 
+  }
+
+  /* 按钮区块优化触控体验 */
+  .btn-row .el-button {
+    min-height: 36px;
+  }
+
+  .el-button--primary {
+    min-height: 40px;
+    font-size: 14px;
+  }
+  
+  /* 隐藏修改后的占位图标大小 */
+  .placeholder i {
+    font-size: 40px;
+  }
+  .placeholder p {
+    font-size: 13px;
+  }
+}
