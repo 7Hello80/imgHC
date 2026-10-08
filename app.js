@@ -32,16 +32,133 @@ new Vue({
   },
 
   mounted() {
-    const overlay = this.$refs.overlay;
-    if (overlay) {
-      overlay.addEventListener('mousedown', this.onDown);
-      overlay.addEventListener('mousemove', this.onMove);
-      overlay.addEventListener('mouseup', this.onUp);
-      overlay.addEventListener('mouseleave', this.onUp);
-    }
+    this.bindEvents();
+  },
+
+  beforeDestroy() {
+    this.unbindEvents();
   },
 
   methods: {
+    /* ================= 事件绑定 ================= */
+    bindEvents() {
+      const overlay = this.$refs.overlay;
+      if (!overlay) return;
+
+      // 鼠标事件
+      this._onMouseDown = (e) => this.onPointerDown(e, 'mouse');
+      this._onMouseMove = (e) => this.onPointerMove(e, 'mouse');
+      this._onMouseUp = (e) => this.onPointerUp(e, 'mouse');
+
+      // 触摸事件（passive: false 以允许 preventDefault）
+      this._onTouchStart = (e) => this.onPointerDown(e, 'touch');
+      this._onTouchMove = (e) => this.onPointerMove(e, 'touch');
+      this._onTouchEnd = (e) => this.onPointerUp(e, 'touch');
+
+      overlay.addEventListener('mousedown', this._onMouseDown);
+      window.addEventListener('mousemove', this._onMouseMove);
+      window.addEventListener('mouseup', this._onMouseUp);
+
+      overlay.addEventListener('touchstart', this._onTouchStart, { passive: false });
+      window.addEventListener('touchmove', this._onTouchMove, { passive: false });
+      window.addEventListener('touchend', this._onTouchEnd);
+      window.addEventListener('touchcancel', this._onTouchEnd);
+    },
+
+    unbindEvents() {
+      const overlay = this.$refs.overlay;
+      if (!overlay) return;
+
+      overlay.removeEventListener('mousedown', this._onMouseDown);
+      window.removeEventListener('mousemove', this._onMouseMove);
+      window.removeEventListener('mouseup', this._onMouseUp);
+
+      overlay.removeEventListener('touchstart', this._onTouchStart);
+      window.removeEventListener('touchmove', this._onTouchMove);
+      window.removeEventListener('touchend', this._onTouchEnd);
+      window.removeEventListener('touchcancel', this._onTouchEnd);
+    },
+
+    /* ================= 统一指针事件处理 ================= */
+    onPointerDown(e, type) {
+      if (!this.imgLoaded) return;
+      // 触摸时阻止页面滚动
+      if (type === 'touch') {
+        e.preventDefault();
+      }
+      const p = this.getPos(e, type);
+      if (!p) return;
+
+      this.isDrawing = true;
+      this.startX = p.x;
+      this.startY = p.y;
+      this.sel = { x: p.x, y: p.y, w: 0, h: 0 };
+      this.drawOverlay();
+    },
+
+    onPointerMove(e, type) {
+      if (!this.isDrawing) return;
+      // 触摸时阻止页面滚动
+      if (type === 'touch') {
+        e.preventDefault();
+      }
+      const p = this.getPos(e, type);
+      if (!p) return;
+
+      const x = Math.min(this.startX, p.x);
+      const y = Math.min(this.startY, p.y);
+      const w = Math.abs(p.x - this.startX);
+      const h = Math.abs(p.y - this.startY);
+      this.sel = { x, y, w, h };
+      this.drawOverlay();
+    },
+
+    onPointerUp(e, type) {
+      if (!this.isDrawing) return;
+      this.isDrawing = false;
+      if (this.sel && (this.sel.w < 2 || this.sel.h < 2)) {
+        this.sel = null;
+      }
+      this.drawOverlay();
+    },
+
+    /* ================= 获取坐标（鼠标 / 触摸通用） ================= */
+    getPos(e, type) {
+      const overlay = this.$refs.overlay;
+      const rect = overlay.getBoundingClientRect();
+
+      let clientX, clientY;
+
+      if (type === 'touch') {
+        // 触摸事件，取第一个触点
+        if (e.touches && e.touches.length > 0) {
+          clientX = e.touches[0].clientX;
+          clientY = e.touches[0].clientY;
+        } else if (e.changedTouches && e.changedTouches.length > 0) {
+          // touchend 时用 changedTouches
+          clientX = e.changedTouches[0].clientX;
+          clientY = e.changedTouches[0].clientY;
+        } else {
+          return null;
+        }
+      } else {
+        // 鼠标事件
+        clientX = e.clientX;
+        clientY = e.clientY;
+      }
+
+      const scaleX = this.naturalW / rect.width;
+      const scaleY = this.naturalH / rect.height;
+
+      let x = (clientX - rect.left) * scaleX;
+      let y = (clientY - rect.top) * scaleY;
+
+      x = Math.max(0, Math.min(this.naturalW, x));
+      y = Math.max(0, Math.min(this.naturalH, y));
+
+      return { x, y };
+    },
+
     /* ================= 图片加载 ================= */
     handleUploadChange(file) {
       const raw = file.raw;
@@ -106,52 +223,7 @@ new Vue({
       a.click();
     },
 
-    /* ================= 选区交互 ================= */
-    getPos(e) {
-      const overlay = this.$refs.overlay;
-      const rect = overlay.getBoundingClientRect();
-      const scaleX = this.naturalW / rect.width;
-      const scaleY = this.naturalH / rect.height;
-
-      let x = (e.clientX - rect.left) * scaleX;
-      let y = (e.clientY - rect.top) * scaleY;
-
-      x = Math.max(0, Math.min(this.naturalW, x));
-      y = Math.max(0, Math.min(this.naturalH, y));
-
-      return { x, y };
-    },
-
-    onDown(e) {
-      if (!this.imgLoaded) return;
-      const p = this.getPos(e);
-      this.isDrawing = true;
-      this.startX = p.x;
-      this.startY = p.y;
-      this.sel = { x: p.x, y: p.y, w: 0, h: 0 };
-      this.drawOverlay();
-    },
-
-    onMove(e) {
-      if (!this.isDrawing) return;
-      const p = this.getPos(e);
-      const x = Math.min(this.startX, p.x);
-      const y = Math.min(this.startY, p.y);
-      const w = Math.abs(p.x - this.startX);
-      const h = Math.abs(p.y - this.startY);
-      this.sel = { x, y, w, h };
-      this.drawOverlay();
-    },
-
-    onUp() {
-      if (!this.isDrawing) return;
-      this.isDrawing = false;
-      if (this.sel && (this.sel.w < 2 || this.sel.h < 2)) {
-        this.sel = null;
-      }
-      this.drawOverlay();
-    },
-
+    /* ================= 绘制选区 ================= */
     drawOverlay() {
       const overlay = this.$refs.overlay;
       if (!overlay) return;
@@ -164,8 +236,8 @@ new Vue({
         ctx.fillRect(s.x, s.y, s.w, s.h);
 
         ctx.strokeStyle = '#409eff';
-        ctx.lineWidth = Math.max(1, this.naturalW / 500);
-        ctx.setLineDash([6, 4]);
+        ctx.lineWidth = Math.max(2, this.naturalW / 400); // 手机端线稍粗
+        ctx.setLineDash([8, 5]);
         ctx.strokeRect(s.x, s.y, s.w, s.h);
         ctx.setLineDash([]);
       }
@@ -206,18 +278,36 @@ new Vue({
         return;
       }
 
-      let result;
-      if (this.direction === 'inverse') {
-        result = this.inverseWarp(this.originalImageData, this.sel);
-      } else {
-        result = this.forwardWarp(this.originalImageData, this.sel);
-      }
+      // 显示加载提示（大图处理可能耗时）
+      const loading = this.$loading({
+        lock: true,
+        text: '正在处理中...',
+        spinner: 'el-icon-loading',
+        background: 'rgba(255, 255, 255, 0.7)'
+      });
 
-      const canvas = this.$refs.canvas;
-      const ctx = canvas.getContext('2d');
-      ctx.putImageData(result, 0, 0);
+      // 用 setTimeout 让 loading 先渲染出来
+      setTimeout(() => {
+        let result;
+        try {
+          if (this.direction === 'inverse') {
+            result = this.inverseWarp(this.originalImageData, this.sel);
+          } else {
+            result = this.forwardWarp(this.originalImageData, this.sel);
+          }
 
-      this.$message.success('扭曲完成');
+          const canvas = this.$refs.canvas;
+          const ctx = canvas.getContext('2d');
+          ctx.putImageData(result, 0, 0);
+
+          this.$message.success('扭曲完成');
+        } catch (err) {
+          console.error(err);
+          this.$message.error('处理失败，请重试');
+        } finally {
+          loading.close();
+        }
+      }, 50);
     },
 
     /* ================= 反向扭曲 ================= */
@@ -230,10 +320,13 @@ new Vue({
       const cx = sel.x + sel.w / 2;
       const cy = sel.y + sel.h / 2;
 
-      for (let v = Math.floor(sel.y); v < Math.ceil(sel.y + sel.h); v++) {
-        for (let u = Math.floor(sel.x); u < Math.ceil(sel.x + sel.w); u++) {
-          if (u < 0 || u >= w || v < 0 || v >= h) continue;
+      const x0 = Math.max(0, Math.floor(sel.x));
+      const y0 = Math.max(0, Math.floor(sel.y));
+      const x1 = Math.min(w, Math.ceil(sel.x + sel.w));
+      const y1 = Math.min(h, Math.ceil(sel.y + sel.h));
 
+      for (let v = y0; v < y1; v++) {
+        for (let u = x0; u < x1; u++) {
           const pt = this.mapInverse(u, v, cx, cy, sel);
           const sx = pt.x;
           const sy = pt.y;
@@ -299,10 +392,13 @@ new Vue({
       const cx = sel.x + sel.w / 2;
       const cy = sel.y + sel.h / 2;
 
-      for (let y = Math.floor(sel.y); y < Math.ceil(sel.y + sel.h); y++) {
-        for (let x = Math.floor(sel.x); x < Math.ceil(sel.x + sel.w); x++) {
-          if (x < 0 || x >= w || y < 0 || y >= h) continue;
+      const x0 = Math.max(0, Math.floor(sel.x));
+      const y0 = Math.max(0, Math.floor(sel.y));
+      const x1 = Math.min(w, Math.ceil(sel.x + sel.w));
+      const y1 = Math.min(h, Math.ceil(sel.y + sel.h));
 
+      for (let y = y0; y < y1; y++) {
+        for (let x = x0; x < x1; x++) {
           const pt = this.mapForward(x, y, cx, cy, sel);
           const tx = Math.round(pt.x);
           const ty = Math.round(pt.y);
@@ -367,7 +463,6 @@ new Vue({
       const h = imgData.height;
       const data = imgData.data;
 
-      // 边界钳制，避免透明边缘
       if (x < 0) x = 0;
       if (y < 0) y = 0;
       if (x > w - 1) x = w - 1;
