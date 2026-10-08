@@ -1,0 +1,271 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #app {
+  height: 100%;
+}
+
+body {
+  font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+  background: #f0f7ff;
+  color: #303133;
+}
+
+.app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== 顶栏 ===== */
+.app-header {
+  height: 60px;
+  flex-shrink: 0;
+  background: #ffffff;
+  border-bottom: 1px solid #d9ecff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.08);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #409eff;
+}
+
+.brand i {
+  font-size: 22px;
+}
+
+.tagline {
+  font-size: 13px;
+  color: #79bbff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ===== 主体 ===== */
+.app-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+/* ===== 左侧面板 ===== */
+.panel {
+  width: 340px;
+  flex-shrink: 0;
+  background: #ffffff;
+  border-right: 1px solid #d9ecff;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.panel-block {
+  margin-bottom: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px dashed #e4f1ff;
+}
+
+.panel-block:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.block-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #409eff;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.idx {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ecf5ff;
+  color: #409eff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* 上传 */
+.uploader .el-upload {
+  width: 100%;
+  border-radius: 8px;
+}
+
+.uploader .el-upload-dragger {
+  width: 100%;
+  height: 120px;
+  border: 1px dashed #a0cfff;
+  background: #f5faff;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.uploader .el-upload-dragger:hover {
+  border-color: #409eff;
+  background: #ecf5ff;
+}
+
+.uploader .el-icon-upload {
+  font-size: 32px;
+  color: #79bbff;
+  margin-bottom: 6px;
+}
+
+.uploader .el-upload__text {
+  font-size: 13px;
+  color: #606266;
+}
+
+.uploader .el-upload__text em {
+  color: #409eff;
+  font-style: normal;
+}
+
+/* 选区信息 */
+.sel-info {
+  font-size: 13px;
+  color: #409eff;
+  background: #ecf5ff;
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  text-align: center;
+  min-height: 36px;
+  line-height: 20px;
+}
+
+.sel-info.empty {
+  color: #909399;
+  background: #f4f4f5;
+}
+
+/* 按钮行 */
+.btn-row {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-row .el-button {
+  flex: 1;
+}
+
+/* 提示 */
+.tip {
+  font-size: 12px;
+  color: #909399;
+  line-height: 1.6;
+  background: #f5faff;
+  border-left: 3px solid #a0cfff;
+  padding: 8px 10px;
+  border-radius: 4px;
+  margin-top: 8px;
+}
+
+.tip b {
+  color: #409eff;
+}
+
+/* ===== 右侧画布区 ===== */
+.stage {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  padding: 24px;
+  position: relative;
+  background: #f0f7ff;
+}
+
+.canvas-wrap {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  max-height: 100%;
+  line-height: 0;
+  box-shadow: 0 4px 20px rgba(64, 158, 255, 0.15);
+  border-radius: 6px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.canvas-wrap canvas {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+}
+
+.overlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+}
+
+/* 占位 */
+.placeholder {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: #a0cfff;
+  text-align: center;
+  user-select: none;
+}
+
+.placeholder i {
+  font-size: 56px;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.placeholder p {
+  font-size: 14px;
+}
+
+/* 滚动条美化 */
+.panel::-webkit-scrollbar,
+.stage::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.panel::-webkit-scrollbar-thumb,
+.stage::-webkit-scrollbar-thumb {
+  background: #c6e2ff;
+  border-radius: 3px;
+}
+
+.panel::-webkit-scrollbar-track,
+.stage::-webkit-scrollbar-track {
+  background: transparent;
+}
