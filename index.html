@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>图片区域扭曲 / 反向扭曲系统</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/element-ui@2.15.14/lib/theme-chalk/index.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <div class="app">
+
+      <!-- ========== 顶栏 ========== -->
+      <header class="app-header">
+        <div class="brand">
+          <i class="el-icon-magic-stick"></i>
+          <span>图片区域扭曲 / 反向扭曲系统</span>
+        </div>
+        <div class="tagline">
+          <i class="el-icon-lock"></i>
+          全程本地浏览器处理 · 图片不会上传
+        </div>
+      </header>
+
+      <div class="app-body">
+
+        <!-- ========== 左侧控制面板 ========== -->
+        <aside class="panel">
+
+          <!-- 1. 上传 -->
+          <div class="panel-block">
+            <div class="block-title"><span class="idx">1</span>选择图片</div>
+            <el-upload
+              class="uploader"
+              drag
+              action="#"
+              accept="image/*"
+              :auto-upload="false"
+              :show-file-list="false"
+              :on-change="handleUploadChange">
+              <i class="el-icon-upload"></i>
+              <div class="el-upload__text">拖拽图片到此处，或 <em>点击选择</em></div>
+            </el-upload>
+          </div>
+
+          <!-- 2. 选区 -->
+          <div class="panel-block">
+            <div class="block-title"><span class="idx">2</span>框选扭曲区域</div>
+            <div class="sel-info" :class="{ empty: !sel }">
+              <template v-if="sel">
+                x: {{ sel.x.toFixed(0) }} &nbsp; y: {{ sel.y.toFixed(0) }}
+                &nbsp;·&nbsp; {{ sel.w.toFixed(0) }} × {{ sel.h.toFixed(0) }}
+              </template>
+              <template v-else>在图片上按住鼠标拖拽框选</template>
+            </div>
+            <div class="btn-row">
+              <el-button size="mini" :disabled="!imgLoaded" @click="selectAll">全选</el-button>
+              <el-button size="mini" :disabled="!imgLoaded" @click="selectCenter">居中 50%</el-button>
+              <el-button size="mini" :disabled="!sel" @click="clearSel">清除</el-button>
+            </div>
+          </div>
+
+          <!-- 3. 参数 -->
+          <div class="panel-block">
+            <div class="block-title"><span class="idx">3</span>扭曲参数</div>
+
+            <el-form label-position="top" size="small">
+              <el-form-item label="扭曲类型">
+                <el-select v-model="warpType" style="width:100%">
+                  <el-option label="桶形 / 枕形（径向）" value="radial"></el-option>
+                  <el-option label="旋涡（Swirl）" value="swirl"></el-option>
+                  <el-option label="波浪（Wave）" value="wave"></el-option>
+                </el-select>
+              </el-form-item>
+
+              <el-form-item :label="'强度：' + strength">
+                <el-slider v-model="strength" :min="-100" :max="100" :step="1"></el-slider>
+              </el-form-item>
+
+              <el-form-item label="扭曲方向">
+                <el-radio-group v-model="direction" size="small">
+                  <el-radio-button label="inverse">反向扭曲</el-radio-button>
+                  <el-radio-button label="forward">正向扭曲</el-radio-button>
+                </el-radio-group>
+              </el-form-item>
+            </el-form>
+
+            <p class="tip">
+              <b>反向扭曲</b>：遍历目标像素反查源坐标 + 双线性插值，结果平滑无空洞。<br />
+              <b>正向扭曲</b>：遍历源像素推送到目标位置，会出现空洞与重叠。
+            </p>
+          </div>
+
+          <!-- 4. 操作 -->
+          <div class="panel-block">
+            <div class="block-title"><span class="idx">4</span>操作</div>
+            <el-button
+              type="primary"
+              style="width:100%"
+              :disabled="!imgLoaded"
+              @click="applyWarp">
+              <i class="el-icon-magic-stick"></i> 应用扭曲
+            </el-button>
+            <div class="btn-row" style="margin-top:10px">
+              <el-button size="mini" :disabled="!imgLoaded" @click="resetImage">
+                <i class="el-icon-refresh-left"></i> 重置
+              </el-button>
+              <el-button size="mini" :disabled="!imgLoaded" @click="download">
+                <i class="el-icon-download"></i> 下载结果
+              </el-button>
+            </div>
+          </div>
+
+        </aside>
+
+        <!-- ========== 右侧画布区 ========== -->
+        <section class="stage" ref="stage">
+          <div class="canvas-wrap" :style="wrapStyle">
+            <canvas ref="canvas"></canvas>
+            <canvas ref="overlay" class="overlay"></canvas>
+          </div>
+
+          <div v-if="!imgLoaded" class="placeholder">
+            <i class="el-icon-picture-outline"></i>
+            <p>请先在左侧选择一张图片</p>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/vue@2.7.16/dist/vue.min.js"></script>
+  <script src="https://unpkg.com/element-ui@2.15.14/lib/index.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
